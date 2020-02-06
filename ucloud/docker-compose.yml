@@ -1,0 +1,40 @@
+version: '2'
+services:
+  ucloud-engine:
+    image: 'gitlab.usto.re:4567/ucloud/ucloud/ucloud-engine:2.7-b9'
+    environment:
+      - TZ=America/Recife
+      - UCLOUD_DB_ADDRESS=172.17.0.1
+      - UVDI_DB_ADDRESS=172.17.0.1
+      - JOBS_DB_ADDRESS=172.17.0.1
+
+  ucloud-web:
+    image: 'gitlab.usto.re:4567/ucloud/ucloud/ucloud-web:2.7-b9'
+    environment:
+      - TZ=America/Recife
+    volumes:
+      - '/etc/ucloud/webapp:/usr/local/apache2/htdocs/assets/config'
+
+  guacd-server:
+    image: 'guacamole/guacd:0.9.10-incubating-RC1'
+
+  ucloud-guacamole:
+    image: 'gitlab.usto.re:4567/ucloud/ucloud/ucloud-guacamole:0.9.9'
+    environment:
+      - TZ=America/Recife
+      - UCLOUD_ADDRESS=http://ucloud-engine:8080/ucloud/rest
+      - UVDI_DB_ADDRESS=172.17.0.1
+    depends_on:
+      - guacd-server
+
+  ucloud-nginx:
+    image: 'gitlab.usto.re:4567/ucloud/ucloud/unginx:v2'
+    environment:
+      - TZ=America/Recife
+    ports:
+      - '80:80'
+      - '443:443'
+    depends_on:
+      - guacd-server
+      - ucloud-engine
+      - ucloud-web
